@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  openvpn:
+    build: .
+    container_name: openvpn
+    cap_add:
+      - NET_ADMIN
+    cap_drop:
+      - ALL
+    ports:
+      - "1194:1194/udp"
+    restart: unless-stopped
+    volumes:
+      - openvpn-data:/etc/openvpn
+    environment:
+      - DEBUG=0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "netstat", "-lun", "|", "grep", ":1194"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  openvpn-data:
+    driver: local
