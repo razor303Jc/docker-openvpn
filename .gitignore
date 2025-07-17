@@ -1,1 +1,53 @@
+# Temporary files
 *~
+*.tmp
+*.swp
+*.swo
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+Thumbs.db
+.directory
+
+# Docker build artifacts
+.docker-build/
+
+# Test artifacts
+test-results/
+test-output/
+
+# Logs
+*.log
+logs/
+
+# Backup files
+*.bak
+*.backup
+
+# Editor files
+.*.kate-swp
+*~$
+
+# Certificate and key files (for security)
+*.key
+*.crt
+*.csr
+*.pem
+*.p12
+*.ovpn
+pki/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.test
+
+# Runtime files
+pid
+*.pid

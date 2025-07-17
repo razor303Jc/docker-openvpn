@@ -1,20 +1,93 @@
 # Quick Start with docker-compose
 
-* Add a new service in docker-compose.yml
+## Modern Docker Compose Configuration
+
+Create a `docker-compose.yml` file with improved security settings:
 
 ```yaml
-version: '2'
+version: '3.8'
+
 services:
   openvpn:
-    cap_add:
-     - NET_ADMIN
-    image: kylemanna/openvpn
+    image: kylemanna/openvpn:latest  # Pin to specific version in production
     container_name: openvpn
+    cap_add:
+      - NET_ADMIN
+    cap_drop:
+      - ALL
     ports:
-     - "1194:1194/udp"
-    restart: always
+      - "1194:1194/udp"
+    restart: unless-stopped
     volumes:
-     - ./openvpn-data/conf:/etc/openvpn
+      - openvpn-data:/etc/openvpn
+    environment:
+      - DEBUG=0  # Set to 1 for debugging
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "netstat", "-an", "|", "grep", "1194"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  openvpn-data:
+    driver: local
+```
+
+## Production-Ready Configuration
+
+For production environments, consider this enhanced configuration:
+
+```yaml
+version: '3.8'
+
+services:
+  openvpn:
+    image: kylemanna/openvpn:2.4  # Use specific version
+    container_name: openvpn-prod
+    cap_add:
+      - NET_ADMIN
+    cap_drop:
+      - ALL
+    ports:
+      - "1194:1194/udp"
+    restart: unless-stopped
+    volumes:
+      - openvpn-data:/etc/openvpn:Z  # SELinux context
+    environment:
+      - DEBUG=0
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "tcp://your-log-server:514"
+        tag: "openvpn"
+    healthcheck:
+      test: ["CMD", "netstat", "-an", "|", "grep", "1194"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+volumes:
+  openvpn-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/openvpn-data  # Use dedicated storage
 ```
 
 

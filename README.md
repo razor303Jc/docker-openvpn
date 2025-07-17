@@ -17,10 +17,77 @@ a corresponding [Digital Ocean Community Tutorial](http://bit.ly/1AGUZkq).
 * Docker Registry @ [kylemanna/openvpn](https://hub.docker.com/r/kylemanna/openvpn/)
 * GitHub @ [kylemanna/docker-openvpn](https://github.com/kylemanna/docker-openvpn)
 
+## Security Best Practices
+
+⚠️ **Important Security Considerations**
+
+Before deploying this OpenVPN server, please review these security recommendations:
+
+### Container Security
+- **Run with non-privileged user**: While OpenVPN requires NET_ADMIN capability, consider using user namespaces
+- **Use specific image versions**: Pin to specific image tags rather than `latest` for production deployments
+- **Regular updates**: Keep the base Alpine image and packages updated
+- **Limited capabilities**: Only grant necessary capabilities (`NET_ADMIN` for OpenVPN)
+
+### PKI Security
+- **Strong passphrases**: Always use strong passphrases for the CA private key
+- **Secure storage**: Store PKI keys securely and consider using external key management
+- **Certificate rotation**: Implement regular certificate rotation policies
+- **Revocation**: Properly revoke compromised certificates and maintain CRL
+
+### Network Security
+- **Firewall rules**: Implement proper firewall rules on the host
+- **VPN configuration**: Review OpenVPN configuration for security best practices
+- **Logging**: Enable comprehensive logging for security monitoring
+
+### Example Secure Deployment
+
+```bash
+# Use specific image version
+docker run -v $OVPN_DATA:/etc/openvpn \
+  -d -p 1194:1194/udp \
+  --cap-add=NET_ADMIN \
+  --cap-drop=ALL \
+  --restart=unless-stopped \
+  --name openvpn-server \
+  kylemanna/openvpn:2.4
+```
+
 ## Quick Start
 
+### Prerequisites
+
+- Docker Engine 20.10+ or compatible container runtime
+- Basic understanding of PKI and OpenVPN concepts
+- Network configuration knowledge
+
+### Basic Setup
+
+#### Quick Setup with Helper Script
+
+We provide a helper script to simplify common operations:
+
+```bash
+# Download the helper script
+curl -o openvpn-helper.sh https://raw.githubusercontent.com/razor303Jc/docker-openvpn/main/openvpn-helper.sh
+chmod +x openvpn-helper.sh
+
+# Initialize OpenVPN server
+./openvpn-helper.sh init udp://YOUR_SERVER_NAME.COM
+
+# Start the server
+./openvpn-helper.sh start
+
+# Add a client
+./openvpn-helper.sh client-add CLIENTNAME
+
+# Get client configuration
+./openvpn-helper.sh client-get CLIENTNAME > CLIENTNAME.ovpn
+```
+
+#### Manual Setup
+
 * Pick a name for the `$OVPN_DATA` data volume container. It's recommended to
-  use the `ovpn-data-` prefix to operate seamlessly with the reference systemd
   service.  Users are encourage to replace `example` with a descriptive name of
   their choosing.
 
